@@ -1,0 +1,6 @@
+.stack-work/
+haskbot.cabal
+*~
+.idea/
+*.secret
+out/
