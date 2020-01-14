@@ -54,44 +54,40 @@ eventHandler dis event =
 
 -- commands
 doEval :: DiscordHandle -> Message -> IO ()
-doEval dis m = do
-  t <-
-    runInterpreter $ do
-      setImports ["Prelude"]
-      eval (T.unpack expr)
-  case t of
-    Right res -> do
-      _ <- restCall dis (R.CreateMessage (messageChannel m) (T.pack res))
-      pure ()
-    Left err -> do
-      _ <- restCall dis (R.CreateMessage (messageChannel m) (T.append "Could not evaluate: " (T.pack (show err))))
-      pure ()
-  pure ()
-  where
-    expr = T.intercalate " " (arguments (messageText m))
+doEval dis m = doInInterpreter dis m eval "evaluate"
 
 doTypeOf :: DiscordHandle -> Message -> IO ()
-doTypeOf dis m = do
+doTypeOf dis m = doInInterpreter dis m typeOf "get type"
+
+doInInterpreter :: DiscordHandle -> Message -> (String -> InterpreterT IO String) -> T.Text -> IO ()
+doInInterpreter dis m func task = do
   t <-
     runInterpreter $ do
       setImports ["Prelude"]
-      typeOf (T.unpack expr)
-  case t of
-    Right res -> do
-      _ <- restCall dis (R.CreateMessage (messageChannel m) (T.pack res))
-      pure ()
-    Left err -> do
-      _ <- restCall dis (R.CreateMessage (messageChannel m) (T.append "Could not get type: " (T.pack (show err))))
-      pure ()
+      func (T.unpack expr)
+  _ <- handleInterpreterOutput dis m task t
   pure ()
   where
     expr = T.intercalate " " (arguments (messageText m))
 
 doPing :: DiscordHandle -> Message -> IO ()
 doPing dis m = do
-  _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "exclamation_point")
+  _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "exclamation")
   _ <- restCall dis (R.CreateMessage (messageChannel m) "Pong!")
   pure ()
+
+-- output handling
+handleInterpreterOutput :: DiscordHandle -> Message -> T.Text -> Either InterpreterError String -> IO ()
+handleInterpreterOutput dis m task res =
+  case res of
+    Right res -> do
+      _ <- restCall dis (R.CreateMessage (messageChannel m) resMsg)
+      pure ()
+      where resMsg = T.intercalate "\n" ["```hs", T.pack res, "```"]
+    Left err -> do
+      _ <- restCall dis (R.CreateMessage (messageChannel m) errMsg)
+      pure ()
+      where errMsg = T.intercalate "" ["Could not ", task, ": ", T.pack (show err)]
 
 -- helpers
 startsWithPrefix :: Message -> Bool
@@ -112,7 +108,3 @@ arguments t = drop 1 (T.splitOn " " t)
 --                              | otherwise             = startsWithAnyCommand m cs
 fromBot :: Message -> Bool
 fromBot m = userIsBot (messageAuthor m)
-
-isTextChannel :: Channel -> Bool
-isTextChannel ChannelText {} = True
-isTextChannel _              = False
