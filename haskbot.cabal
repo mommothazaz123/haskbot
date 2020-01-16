@@ -1,0 +1,65 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: cbe4f33ecdd51be09478b2fe6739d73f4892b26f74b42d0e6e295b58136305d9
+
+name:           haskbot
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/haskbot#readme>
+homepage:       https://github.com/githubuser/haskbot#readme
+bug-reports:    https://github.com/githubuser/haskbot/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/haskbot
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_haskbot
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , text
+    , discord-haskell
+    , hint
+  default-language: Haskell2010
+
+executable haskbot-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_haskbot
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , haskbot
+  default-language: Haskell2010
+
+test-suite haskbot-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_haskbot
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , haskbot
+  default-language: Haskell2010
